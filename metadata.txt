@@ -1,0 +1,39 @@
+# This file contains metadata for your plugin. Since 
+# version 2.0 of QGIS this is the proper way to supply 
+# information about a plugin. The old method of 
+# embedding metadata in __init__.py will 
+# is no longer supported since version 2.0.
+
+# This file should be included when you package your plugin.# Mandatory items:
+
+[general]
+name=EnRoute
+qgisMinimumVersion=3.0
+description=点列に対するルート検索
+version=0.1
+author=Yoichi Kayama/Aeroasahi corporation
+email=youichi-kayama@aeroasahi.co.jp
+
+about=道路ネットワーク上に発生させた点列に対して最短経路検索を行い、結果をラインのレイヤとして生成するモジュール 生成されたラインレイヤから各ラインの距離を算出しCSV出力を行う.モジュール
+
+tracker=https://github.com/yoichigmf/EnRoute/Isuues
+repository=https://github.com/yoichigmf/EnRoute
+# End of mandatory metadata
+
+# Recommended items:
+
+# Uncomment the following line and add your changelog:
+# changelog=
+
+# Tags are comma separated with spaces allowed
+tags=python
+
+homepage=https://github.com/yoichigmf/EnRoute
+category=Vector
+icon=icon.png
+# experimental flag
+experimental=False
+
+# deprecated flag (applies to the whole plugin, not just a single version)
+deprecated=False
+
