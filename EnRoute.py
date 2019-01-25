@@ -223,13 +223,18 @@ class EnRoute:
                  
                  features = ptlayer.getFeatures()
                  
+                 
+                 param = { 'DEFAULT_DIRECTION' : 2, 'DEFAULT_SPEED' : 50, 'DIRECTION_FIELD' : None,'INPUT' : rdlayer, 'OUTPUT' : 'memory:', 'SPEED_FIELD' : None, 'START_POINT' : '-32900.94654466226,-45493.2545761942 [USER:100025]', 'STRATEGY' : 0, 'TOLERANCE' : 0, 'VALUE_BACKWARD' : '', 'VALUE_BOTH' : '', 'VALUE_FORWARD' : '' }
+                 
                  for pfeature in features:
                       pfeature.geometry()
                     
                  
                  
                  rdtext = rdlayer.name()
-                 self.iface.messageBar().pushMessage("EnRoute", rdtext, level=1, duration=3)
+                 self.iface.messageBar().pushMessage("EnRoute", rdtext, level=0, duration=3)
+                 
+                 
             
             else:
                  self.iface.messageBar().pushMessage("EnRoute", u'レイヤの指定が足りません', level=1, duration=3)
