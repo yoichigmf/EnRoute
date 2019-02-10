@@ -164,16 +164,17 @@ class EnRoute:
 
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
+        ricon_path = ':/plugins/EnRoute/route.png'
 
-        icon_path = ':/plugins/EnRoute/icon.png'
         self.add_action(
-            icon_path,
+            ricon_path,
             text=self.tr(u'点列経路探索'),
             callback=self.run,
             parent=self.iface.mainWindow())
             
+        icon_path = ':/plugins/EnRoute/icon.png'
         self.add_action(
-            icon_path,
+            ricon_path,
             text=self.tr(u'CSVファイル作成'),
             callback=self.runCSV,
             parent=self.iface.mainWindow())
@@ -226,9 +227,30 @@ class EnRoute:
                  
                  param = { 'DEFAULT_DIRECTION' : 2, 'DEFAULT_SPEED' : 50, 'DIRECTION_FIELD' : None,'INPUT' : rdlayer, 'OUTPUT' : 'memory:', 'SPEED_FIELD' : None, 'START_POINT' : '-32900.94654466226,-45493.2545761942 [USER:100025]', 'STRATEGY' : 0, 'TOLERANCE' : 0, 'VALUE_BACKWARD' : '', 'VALUE_BOTH' : '', 'VALUE_FORWARD' : '' }
                  
-                 for pfeature in features:
-                      pfeature.geometry()
-                    
+                 ip = 1
+                 
+                 for pfeature in features:    #点群レイヤのポイントループ
+                      egeom = pfeature.geometry()
+                      
+                      geomSingleType = QgsWkbTypes.isSingleType(egeom.wkbType())
+                      
+                      if geomSingleType:
+                              x = egeom.asPoint()
+                              print("Point: ", x)
+                              param['END_POINT'] = x
+                              
+                      else:
+                              x = egeom.asMultiPoint()
+                              print("MultiPoint: ", x)
+                              param['END_POINT'] = x
+                              
+                      if ip < 10:
+                              self.iface.messageBar().pushMessage("EnRoute", param['END_POINT'].asWkt(), level=0, duration=3)
+                      
+                      ip = ip + 1
+                      
+                      
+                      
                  
                  
                  rdtext = rdlayer.name()

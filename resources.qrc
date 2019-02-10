@@ -1,5 +1,7 @@
-<RCC>
+﻿<!DOCTYPE RCC>
+<RCC version="1.0">
     <qresource prefix="/plugins/EnRoute" >
-        <file>icon.png</file>
+        <file alias="csv.png">icon.png</file>
+        <file alias="route.png">route.png</file>
     </qresource>
 </RCC>
