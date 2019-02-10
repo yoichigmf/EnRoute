@@ -25,13 +25,14 @@ from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction
 
-from qgis.core import QgsWkbTypes, QgsGeometry, QgsVectorLayer, QgsField, QgsFeature, QgsMapLayer
+from qgis.core import QgsWkbTypes, QgsGeometry, QgsVectorLayer, QgsField, QgsFeature, QgsMapLayer,QgsProcessingFeedback
 
 # Initialize Qt resources from file resources.py
 from .resources import *
 # Import the code for the dialog
 from .EnRoute_dialog import EnRouteDialog
 import os.path
+import processing
 
 
 class EnRoute:
@@ -225,9 +226,11 @@ class EnRoute:
                  features = ptlayer.getFeatures()
                  
                  
-                 param = { 'DEFAULT_DIRECTION' : 2, 'DEFAULT_SPEED' : 50, 'DIRECTION_FIELD' : None,'INPUT' : rdlayer, 'OUTPUT' : 'memory:', 'SPEED_FIELD' : None, 'START_POINT' : '-32900.94654466226,-45493.2545761942 [USER:100025]', 'STRATEGY' : 0, 'TOLERANCE' : 0, 'VALUE_BACKWARD' : '', 'VALUE_BOTH' : '', 'VALUE_FORWARD' : '' }
+                 params = { 'DEFAULT_DIRECTION' : 2, 'DEFAULT_SPEED' : 50, 'DIRECTION_FIELD' : None,'INPUT' : rdlayer, 'OUTPUT' : 'memory:', 'SPEED_FIELD' : None, 'START_POINT' : '-32900.94654466226,-45493.2545761942 [USER:100025]', 'STRATEGY' : 0, 'TOLERANCE' : 0, 'VALUE_BACKWARD' : '', 'VALUE_BOTH' : '', 'VALUE_FORWARD' : '' }
                  
                  ip = 1
+                 
+                 feedback = QgsProcessingFeedback()
                  
                  for pfeature in features:    #点群レイヤのポイントループ
                       egeom = pfeature.geometry()
@@ -237,15 +240,18 @@ class EnRoute:
                       if geomSingleType:
                               x = egeom.asPoint()
                               print("Point: ", x)
-                              param['END_POINT'] = x
+                              params['END_POINT'] = format( x.x(),'f') + ',' + format(x.y(), 'f')
+                              print( params['END_POINT'] )
                               
                       else:
                               x = egeom.asMultiPoint()
                               print("MultiPoint: ", x)
-                              param['END_POINT'] = x
+                              params['END_POINT']  = format( x.x(),'f') +',' +  format(x.y(), 'f')
                               
                       if ip < 10:
-                              self.iface.messageBar().pushMessage("EnRoute", param['END_POINT'].asWkt(), level=0, duration=3)
+                              res = processing.run('qgis:shortestpathpointtopoint', params, feedback=feedback)
+                              
+                              self.iface.messageBar().pushMessage("EnRoute", params['END_POINT'], level=0, duration=3)
                       
                       ip = ip + 1
                       
