@@ -21,11 +21,11 @@
  *                                                                         *
  ***************************************************************************/
 """
-from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
+from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication,QVariant
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction
 
-from qgis.core import QgsWkbTypes, QgsGeometry, QgsVectorLayer, QgsField, QgsFeature, QgsMapLayer,QgsProcessingFeedback
+from qgis.core import QgsWkbTypes, QgsGeometry, QgsVectorLayer, QgsField, QgsFeature, QgsMapLayer,QgsProcessingFeedback,QgsProject
 
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -228,6 +228,17 @@ class EnRoute:
                  
                  params = { 'DEFAULT_DIRECTION' : 2, 'DEFAULT_SPEED' : 50, 'DIRECTION_FIELD' : None,'INPUT' : rdlayer, 'OUTPUT' : 'memory:', 'SPEED_FIELD' : None, 'START_POINT' : '-32900.94654466226,-45493.2545761942 [USER:100025]', 'STRATEGY' : 0, 'TOLERANCE' : 0, 'VALUE_BACKWARD' : '', 'VALUE_BOTH' : '', 'VALUE_FORWARD' : '' }
                  
+                 # create layer
+                 vl = QgsVectorLayer("Line", "temporary_line1", "memory")
+                 pr = vl.dataProvider()
+                 
+                 # add fields
+                 pr.addAttributes([QgsField("tid",  QVariant.Int),
+                    QgsField("start", QVariant.String),
+                    QgsField("end",  QVariant.String),
+                    QgsField("cost", QVariant.Double)])
+                 vl.updateFields() # tell the vector layer to fetch changes from the provider
+                 
                  ip = 1
                  
                  feedback = QgsProcessingFeedback()
@@ -248,16 +259,44 @@ class EnRoute:
                               print("MultiPoint: ", x)
                               params['END_POINT']  = format( x.x(),'f') +',' +  format(x.y(), 'f')
                               
-                      if ip < 10:
-                              res = processing.run('qgis:shortestpathpointtopoint', params, feedback=feedback)
+                      #if ip < 10:
+                      res = processing.run('qgis:shortestpathpointtopoint', params, feedback=feedback)
+                      result_layer = res['OUTPUT']
+                      
+                      
                               
-                              self.iface.messageBar().pushMessage("EnRoute", params['END_POINT'], level=0, duration=3)
+                      #print(result_layer.isValid())
+                              
+                      if result_layer.isValid():
+                              #          QgsProject.instance().addMapLayer(result_layer)
+              
+                      
+                      
+                             nfeatures = result_layer.getFeatures()
+                             for nf in nfeatures:    #ルートレイヤのラインループ
+                                 tgeom = nf.geometry()
+                             
+                                # add a feature
+                                 fet = QgsFeature(pr.fields())
+                                 fet.setGeometry(tgeom)
+                                 #fet.setAttributes( QVariant(pfeature['fid']),QVariant(nf['start']),QVariant(nf['end']), QVariant(nf['cost']))
+                                 fet['tid'] = pfeature['fid']
+                                 fet['start'] = nf['start']
+                                 fet['end'] = nf['end']
+                                 fet['cost'] = nf['cost']
+                                 pr.addFeatures([fet])
+
+                             
+                             self.iface.messageBar().pushMessage("EnRoute", params['END_POINT'], level=0, duration=3)
+                      else:
+                             self.iface.messageBar().pushMessage("EnRoute", 'routing error!', level=0, duration=3)
                       
                       ip = ip + 1
                       
+                      del( result_layer )
                       
                       
-                 
+                 QgsProject.instance().addMapLayer(vl)
                  
                  rdtext = rdlayer.name()
                  self.iface.messageBar().pushMessage("EnRoute", rdtext, level=0, duration=3)
