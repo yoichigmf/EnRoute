@@ -25,7 +25,7 @@ from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication,QVar
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction
 
-from qgis.core import QgsWkbTypes, QgsGeometry, QgsVectorLayer, QgsField, QgsFeature, QgsMapLayer,QgsProcessingFeedback,QgsProject
+from qgis.core import QgsWkbTypes, QgsGeometry, QgsVectorLayer, QgsField, QgsFeature, QgsMapLayer,QgsProcessingFeedback,QgsProject,QgsVectorDataProvider
 
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -232,12 +232,16 @@ class EnRoute:
                  vl = QgsVectorLayer("Line", "temporary_line1", "memory")
                  pr = vl.dataProvider()
                  
+                 caps = pr.capabilities()
+                 
+                 
                  # add fields
                  pr.addAttributes([QgsField("tid",  QVariant.Int),
                     QgsField("start", QVariant.String),
                     QgsField("end",  QVariant.String),
                     QgsField("cost", QVariant.Double)])
                  vl.updateFields() # tell the vector layer to fetch changes from the provider
+                 vl.beginEditCommand("Feature triangulation")
                  
                  ip = 1
                  
@@ -284,10 +288,15 @@ class EnRoute:
                                  fet['start'] = nf['start']
                                  fet['end'] = nf['end']
                                  fet['cost'] = nf['cost']
-                                 pr.addFeatures([fet])
+                                 
+                                 if  caps & QgsVectorDataProvider.AddAttributes:  
+                                          (res, outFeats ) = pr.addFeatures([fet])
+                                          self.iface.messageBar().pushMessage("EnRoute", params['END_POINT'], level=0, duration=3)
+                                 else:
+                                          self.iface.messageBar().pushMessage("EnRoute", 'write feature error!', level=0, duration=3)
 
                              
-                             self.iface.messageBar().pushMessage("EnRoute", params['END_POINT'], level=0, duration=3)
+  
                       else:
                              self.iface.messageBar().pushMessage("EnRoute", 'routing error!', level=0, duration=3)
                       
@@ -296,10 +305,13 @@ class EnRoute:
                       del( result_layer )
                       
                       
+                 vl.endEditCommand()
+                 self.iface.messageBar().pushMessage("EnRoute", 'add result to project', level=0, duration=3)
                  QgsProject.instance().addMapLayer(vl)
-                 
+                 self.iface.messageBar().pushMessage("EnRoute", 'add result to project done', level=0, duration=3)              
                  rdtext = rdlayer.name()
-                 self.iface.messageBar().pushMessage("EnRoute", rdtext, level=0, duration=3)
+                 
+                 
                  
                  
             
