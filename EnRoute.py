@@ -25,7 +25,7 @@ from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication,QVar
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction
 
-from qgis.core import QgsWkbTypes, QgsGeometry, QgsVectorLayer, QgsField, QgsFeature, QgsMapLayer,QgsProcessingFeedback,QgsProject,QgsVectorDataProvider
+from qgis.core import QgsWkbTypes, QgsGeometry, QgsVectorLayer, QgsField, QgsFeature, QgsMapLayer,QgsProcessingFeedback,QgsProject,QgsVectorDataProvider,QgsLayerTreeLayer
 
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -229,11 +229,17 @@ class EnRoute:
                  params = { 'DEFAULT_DIRECTION' : 2, 'DEFAULT_SPEED' : 50, 'DIRECTION_FIELD' : None,'INPUT' : rdlayer, 'OUTPUT' : 'memory:', 'SPEED_FIELD' : None, 'START_POINT' : '-32900.94654466226,-45493.2545761942 [USER:100025]', 'STRATEGY' : 0, 'TOLERANCE' : 0, 'VALUE_BACKWARD' : '', 'VALUE_BOTH' : '', 'VALUE_FORWARD' : '' }
                  
                  # create layer
-                 vl = QgsVectorLayer("Line", "temporary_line1", "memory")
+                 vl = QgsVectorLayer("LineString", "temporary_line1", "memory")
+                 
+                 #vl = QgsVectorLayer("c:/work/tmp.geojson|geometrytype=Line", "temporary_line1", "ogr")
+                 
+                 if not vl:
+                    print("Layer failed to load!")     
+                         
                  pr = vl.dataProvider()
                  
                  caps = pr.capabilities()
-                 
+           
                  
                  # add fields
                  pr.addAttributes([QgsField("tid",  QVariant.Int),
@@ -241,6 +247,11 @@ class EnRoute:
                     QgsField("end",  QVariant.String),
                     QgsField("cost", QVariant.Double)])
                  vl.updateFields() # tell the vector layer to fetch changes from the provider
+                 
+                 QgsProject.instance().addMapLayer(vl, -1)
+                 layerTree = self.iface.layerTreeCanvasBridge().rootGroup()
+                 layerTree.insertChildNode(-1, QgsLayerTreeLayer(vl))
+                     
                  vl.beginEditCommand("Feature triangulation")
                  
                  ip = 1
@@ -304,10 +315,12 @@ class EnRoute:
                       
                       del( result_layer )
                       
-                      
+                 vl.updateExtents()     
                  vl.endEditCommand()
+                 vl.commitChanges()
+                 
                  self.iface.messageBar().pushMessage("EnRoute", 'add result to project', level=0, duration=3)
-                 QgsProject.instance().addMapLayer(vl)
+                 #QgsProject.instance().addMapLayer(vl)
                  self.iface.messageBar().pushMessage("EnRoute", 'add result to project done', level=0, duration=3)              
                  rdtext = rdlayer.name()
                  
