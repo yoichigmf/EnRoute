@@ -223,22 +223,40 @@ class EnRoute:
                  p1g = p1.geometry()
                  p2g = p2.geometry()
                  
+ 
+                 params = { 'DEFAULT_DIRECTION' : 2, 'DEFAULT_SPEED' : 50, 'DIRECTION_FIELD' : None,'INPUT' : rdlayer, 'OUTPUT' : 'memory:', 'SPEED_FIELD' : None, 'STRATEGY' : 0, 'TOLERANCE' : 0, 'VALUE_BACKWARD' : '', 'VALUE_BOTH' : '', 'VALUE_FORWARD' : '' }
+
+                 p1SingleType = QgsWkbTypes.isSingleType(p1g.wkbType())
+                  
+                 if p1SingleType:
+                    xy = p1g.asPoint()
+                    #print("Point: ", x)
+                    params['START_POINT'] = format( xy.x(),'f') + ',' + format(xy.y(), 'f')
+                    #print( params['END_POINT'] )
+                              
+                 else:
+                    xy = egeom.asMultiPoint()
+                    #print("MultiPoint: ", x)
+                    params['START_POINT']  = format( xy.x(),'f') +',' +  format(xy.y(), 'f')
+                 
+                 
+
+                    
+                    
                  features = ptlayer.getFeatures()
                  
                  
-                 params = { 'DEFAULT_DIRECTION' : 2, 'DEFAULT_SPEED' : 50, 'DIRECTION_FIELD' : None,'INPUT' : rdlayer, 'OUTPUT' : 'memory:', 'SPEED_FIELD' : None, 'START_POINT' : '-32900.94654466226,-45493.2545761942 [USER:100025]', 'STRATEGY' : 0, 'TOLERANCE' : 0, 'VALUE_BACKWARD' : '', 'VALUE_BOTH' : '', 'VALUE_FORWARD' : '' }
                  
                  # create layer
                  vl = QgsVectorLayer("LineString", "temporary_line1", "memory")
                  
-                 #vl = QgsVectorLayer("c:/work/tmp.geojson|geometrytype=Line", "temporary_line1", "ogr")
                  
                  if not vl:
                     print("Layer failed to load!")     
                          
                  pr = vl.dataProvider()
                  
-                 caps = pr.capabilities()
+  
            
                  
                  # add fields
@@ -248,76 +266,13 @@ class EnRoute:
                     QgsField("cost", QVariant.Double)])
                  vl.updateFields() # tell the vector layer to fetch changes from the provider
                  
-                 QgsProject.instance().addMapLayer(vl, -1)
-                 layerTree = self.iface.layerTreeCanvasBridge().rootGroup()
-                 layerTree.insertChildNode(-1, QgsLayerTreeLayer(vl))
-                     
-                 vl.beginEditCommand("Feature triangulation")
-                 
-                 ip = 1
-                 
-                 feedback = QgsProcessingFeedback()
-                 
-                 for pfeature in features:    #点群レイヤのポイントループ
-                      egeom = pfeature.geometry()
-                      
-                      geomSingleType = QgsWkbTypes.isSingleType(egeom.wkbType())
-                      
-                      if geomSingleType:
-                              x = egeom.asPoint()
-                              print("Point: ", x)
-                              params['END_POINT'] = format( x.x(),'f') + ',' + format(x.y(), 'f')
-                              print( params['END_POINT'] )
-                              
-                      else:
-                              x = egeom.asMultiPoint()
-                              print("MultiPoint: ", x)
-                              params['END_POINT']  = format( x.x(),'f') +',' +  format(x.y(), 'f')
-                              
-                      #if ip < 10:
-                      res = processing.run('qgis:shortestpathpointtopoint', params, feedback=feedback)
-                      result_layer = res['OUTPUT']
-                      
-                      
-                              
-                      #print(result_layer.isValid())
-                              
-                      if result_layer.isValid():
-                              #          QgsProject.instance().addMapLayer(result_layer)
-              
-                      
-                      
-                             nfeatures = result_layer.getFeatures()
-                             for nf in nfeatures:    #ルートレイヤのラインループ
-                                 tgeom = nf.geometry()
-                             
-                                # add a feature
-                                 fet = QgsFeature(pr.fields())
-                                 fet.setGeometry(tgeom)
-                                 #fet.setAttributes( QVariant(pfeature['fid']),QVariant(nf['start']),QVariant(nf['end']), QVariant(nf['cost']))
-                                 fet['tid'] = pfeature['fid']
-                                 fet['start'] = nf['start']
-                                 fet['end'] = nf['end']
-                                 fet['cost'] = nf['cost']
-                                 
-                                 if  caps & QgsVectorDataProvider.AddAttributes:  
-                                          (res, outFeats ) = pr.addFeatures([fet])
-                                          self.iface.messageBar().pushMessage("EnRoute", params['END_POINT'], level=0, duration=3)
-                                 else:
-                                          self.iface.messageBar().pushMessage("EnRoute", 'write feature error!', level=0, duration=3)
+                 QgsProject.instance().addMapLayer(vl)
 
-                             
-  
-                      else:
-                             self.iface.messageBar().pushMessage("EnRoute", 'routing error!', level=0, duration=3)
-                      
-                      ip = ip + 1
-                      
-                      del( result_layer )
-                      
-                 vl.updateExtents()     
-                 vl.endEditCommand()
-                 vl.commitChanges()
+                     
+                 self.routing_loop( vl, features, params )  #  経路探索ループ
+                     
+                     
+
                  
                  self.iface.messageBar().pushMessage("EnRoute", 'add result to project', level=0, duration=3)
                  #QgsProject.instance().addMapLayer(vl)
@@ -334,6 +289,79 @@ class EnRoute:
             
             pass
             
+            
+    def  routing_loop( self, vl, features ,params ):    
+    
+            pr = vl.dataProvider()
+            vl.beginEditCommand("Feature triangulation")
+            caps = pr.capabilities()     
+            
+            ip = 1
+                 
+            feedback = QgsProcessingFeedback()
+                 
+            for pfeature in features:    #点群レイヤのポイントループ
+                 egeom = pfeature.geometry()
+                      
+                 geomSingleType = QgsWkbTypes.isSingleType(egeom.wkbType())
+                      
+                 if geomSingleType:
+                      x = egeom.asPoint()
+                      print("Point: ", x)
+                      params['END_POINT'] = format( x.x(),'f') + ',' + format(x.y(), 'f')
+                      print( params['END_POINT'] )
+                              
+                 else:
+                      x = egeom.asMultiPoint()
+                      print("MultiPoint: ", x)
+                      params['END_POINT']  = format( x.x(),'f') +',' +  format(x.y(), 'f')
+                              
+                      #if ip < 10:
+                 res = processing.run('qgis:shortestpathpointtopoint', params, feedback=feedback)
+                 result_layer = res['OUTPUT']
+                      
+                      
+                              
+                      #print(result_layer.isValid())
+                              
+                 if result_layer.isValid():
+                      #          QgsProject.instance().addMapLayer(result_layer)
+              
+                      
+                  
+                      nfeatures = result_layer.getFeatures()
+                      for nf in nfeatures:    #ルートレイヤのラインループ
+                             tgeom = nf.geometry()
+                             
+                             # add a feature
+                             fet = QgsFeature(pr.fields())
+                             fet.setGeometry(tgeom)
+                             #fet.setAttributes( QVariant(pfeature['fid']),QVariant(nf['start']),QVariant(nf['end']), QVariant(nf['cost']))
+                             fet['tid'] = pfeature['fid']
+                             fet['start'] = nf['start']
+                             fet['end'] = nf['end']
+                             fet['cost'] = nf['cost']
+                                 
+                             if  caps & QgsVectorDataProvider.AddAttributes:  
+                                     (res, outFeats ) = pr.addFeatures([fet])
+                                     self.iface.messageBar().pushMessage("EnRoute", params['END_POINT'], level=0, duration=3)
+                             else:
+                                     self.iface.messageBar().pushMessage("EnRoute", 'write feature error!', level=0, duration=3)
+
+                             
+  
+                 else:
+                      self.iface.messageBar().pushMessage("EnRoute", 'routing error!', level=0, duration=3)
+                      
+                 ip = ip + 1
+                      
+                 del( result_layer )
+                      
+            vl.updateExtents()     
+            vl.endEditCommand()
+            vl.commitChanges()
+            
+    
     def getStartPoint(self, stLayer):
         #    2個の指定点を取得する
     
