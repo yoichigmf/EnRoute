@@ -31,6 +31,9 @@ from qgis.core import QgsWkbTypes, QgsGeometry, QgsVectorLayer, QgsField, QgsFea
 from .resources import *
 # Import the code for the dialog
 from .EnRoute_dialog import EnRouteDialog
+
+from .CSVOutput_dialog import CSVOutputDialog
+
 import os.path
 import processing
 
@@ -67,6 +70,9 @@ class EnRoute:
         # Create the dialog (after translation) and keep reference
         self.dlg = EnRouteDialog()
 
+
+        self.dlg2 = CSVOutputDialog()
+        
         # Declare instance attributes
         self.actions = []
         self.menu = self.tr(u'&EnRoute')
@@ -437,9 +443,9 @@ class EnRoute:
     def runCSV(self):
         """Run method that performs all the real work"""
         # show the dialog
-        self.dlg.show()
+        self.dlg2.show()
         # Run the dialog event loop
-        result = self.dlg.exec_()
+        result = self.dlg2.exec_()
         # See if OK was pressed
         if result:
             # Do something useful here - delete the line containing pass and
