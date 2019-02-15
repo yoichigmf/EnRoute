@@ -179,9 +179,9 @@ class EnRoute:
             callback=self.run,
             parent=self.iface.mainWindow())
             
-        icon_path = ':/plugins/EnRoute/icon.png'
+        icon_path = ':/plugins/EnRoute/csv.png'
         self.add_action(
-            ricon_path,
+            icon_path,
             text=self.tr(u'CSVファイル作成'),
             callback=self.runCSV,
             parent=self.iface.mainWindow())
