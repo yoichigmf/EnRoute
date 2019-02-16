@@ -25,7 +25,7 @@ from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication,QVar
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction
 
-from qgis.core import QgsWkbTypes, QgsGeometry, QgsVectorLayer, QgsField, QgsFeature, QgsMapLayer,QgsProcessingFeedback,QgsProject,QgsVectorDataProvider,QgsLayerTreeLayer,QgsDistanceArea
+from qgis.core import QgsWkbTypes, QgsGeometry, QgsVectorLayer, QgsField, QgsFeature, QgsMapLayer,QgsProcessingFeedback,QgsProject,QgsVectorDataProvider,QgsLayerTreeLayer,QgsDistanceArea,QgsVectorFileWriter
 
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -441,6 +441,7 @@ class EnRoute:
         return p1, p2
             
     def runCSV(self):
+        # CSV 出力実行
         """Run method that performs all the real work"""
         # show the dialog
         self.dlg2.show()
@@ -450,6 +451,15 @@ class EnRoute:
         if result:
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
+            
+            cnvlayer = self.dlg2.mMapLayerComboBox.currentLayer() # 変換対象
+            
+            error = QgsVectorFileWriter.writeAsVectorFormat(cnvlayer, "c:\\temp\\sample.csv", "utf-8",  driverName="csv")
+
+            if error[0] == QgsVectorFileWriter.NoError:
+                  print ("success!")
+            else:
+                  print (error[1])
             pass
             
                         
