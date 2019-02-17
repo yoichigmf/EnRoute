@@ -444,9 +444,12 @@ class EnRoute:
         # CSV 出力実行
         """Run method that performs all the real work"""
         # show the dialog
+        
         self.dlg2.show()
         # Run the dialog event loop
         result = self.dlg2.exec_()
+        
+        #result = self.dlg2.getSaveFileName(NULL,’CSV File name',"","")
         # See if OK was pressed
         if result:
             # Do something useful here - delete the line containing pass and
@@ -454,12 +457,20 @@ class EnRoute:
             
             cnvlayer = self.dlg2.mMapLayerComboBox.currentLayer() # 変換対象
             
-            error = QgsVectorFileWriter.writeAsVectorFormat(cnvlayer, "c:\\temp\\sample.csv", "utf-8",  driverName="csv")
+            tgtfile =  self.dlg2.mQgsFileWidget.filePath()
+            
+            if tgtfile is not None:
+            
+                 error = QgsVectorFileWriter.writeAsVectorFormat(cnvlayer, tgtfile , "utf-8",  driverName="csv")
 
-            if error[0] == QgsVectorFileWriter.NoError:
-                  print ("success!")
+                 if error[0] == QgsVectorFileWriter.NoError:
+                       print ("success!")
+                 else:
+                       print (error[1])
+                       
             else:
-                  print (error[1])
+                 self.iface.messageBar().pushMessage("EnRoute", u'ファイル名が指定されていません', level=1, duration=3)
+            
             pass
             
                         

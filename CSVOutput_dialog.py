@@ -49,7 +49,10 @@ class CSVOutputDialog(QtWidgets.QDialog, FORM_CLASS):
         #self.mMapLayerComboBox_2.setFilters(QgsMapLayerProxyModel.PointLayer)
         #self.mMapLayerComboBox_3.setFilters(QgsMapLayerProxyModel.PointLayer)
         
-        
+        self.mQgsFileWidget.setStorageMode(QgsFileWidget.SaveFile)
+        self.mQgsFileWidget.setConfirmOverwrite(True)
+        self.mQgsFileWidget.setFilter(self.tr("CSV (*.csv *.CSV)"))
+        self.mQgsFileWidget.setDialogTitle(u'出力CSVファイルを指定して下さい')
 
 
 
