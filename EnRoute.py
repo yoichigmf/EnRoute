@@ -23,7 +23,10 @@
 """
 from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication,QVariant
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QAction
+from PyQt5.QtWidgets import QAction,QProgressBar
+
+
+from qgis.PyQt.QtCore import *
 
 from qgis.core import QgsWkbTypes, QgsGeometry, QgsVectorLayer, QgsField, QgsFeature, QgsMapLayer,QgsProcessingFeedback,QgsProject,QgsVectorDataProvider,QgsLayerTreeLayer,QgsDistanceArea,QgsVectorFileWriter
 
@@ -221,7 +224,7 @@ class EnRoute:
             if ( rdlayer is not None and ptlayer is not None and ABlayer is not None):
                  
                                   
- 
+                npoint = ptlayer.featureCount()
                  
                  #  2点取得
                 p1, p2 = self.getStartPoint( ABlayer )
@@ -302,7 +305,7 @@ class EnRoute:
                 QgsProject.instance().addMapLayer(vl1)
 
                      
-                self.routing_loop( vl1, features, params, p1g )  #  p1 経路探索ループ
+                self.routing_loop( vl1, features, params, p1g , npoint )  #  p1 経路探索ループ
                      
                 self.iface.messageBar().pushMessage("EnRoute", 'add result from point1 to project done', level=0, duration=3)       
                               
@@ -326,7 +329,7 @@ class EnRoute:
                 features2 = ptlayer.getFeatures()
                  
                      
-                self.routing_loop( vl2, features2, params, p2g )  #  p2 経路探索ループ
+                self.routing_loop( vl2, features2, params, p2g , npoint )  #  p2 経路探索ループ
                  
 
 
@@ -345,7 +348,7 @@ class EnRoute:
             pass
             
             
-    def  routing_loop( self, vl, features ,params, pgp ):    
+    def  routing_loop( self, vl, features ,params, pgp , npoint):    
     
             pr = vl.dataProvider()
             vl.beginEditCommand("Feature triangulation")
@@ -353,6 +356,9 @@ class EnRoute:
             
             ip = 1
                  
+                 
+           
+
 
             d = QgsDistanceArea()
             d.setEllipsoid('WGS84')
@@ -376,7 +382,6 @@ class EnRoute:
                       print("MultiPoint: ", x)
                       params['END_POINT']  = format( x.x(),'f') +',' +  format(x.y(), 'f')
                               
-                      #if ip < 10:
                       
                 
                 if  d.measureLine(pgp.asPoint(),egeom.asPoint()) > 0.0 :
@@ -415,11 +420,18 @@ class EnRoute:
   
                       else:
                                          self.iface.messageBar().pushMessage("EnRoute", 'routing error!', level=0, duration=3)
+                                         
+                      
                       
                       ip = ip + 1
+                     
+                      percent = ip / float(npoint) * 100
+                      self.iface.mainWindow().statusBar().showMessage("Processed {} %".format(int(percent)))
                       
                       del( result_layer )
-                      
+                 
+ 
+            self.iface.mainWindow().statusBar().clearMessage()
             vl.updateExtents()     
             vl.endEditCommand()
             vl.commitChanges()

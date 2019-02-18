@@ -10,7 +10,7 @@
 name=EnRoute
 qgisMinimumVersion=3.0
 description=点列に対するルート検索
-version=0.1
+version=0.2
 author=Yoichi Kayama/Aeroasahi corporation
 email=youichi-kayama@aeroasahi.co.jp
 
