@@ -28,7 +28,7 @@ from PyQt5.QtWidgets import QAction,QProgressBar
 
 from qgis.PyQt.QtCore import *
 
-from qgis.core import QgsWkbTypes, QgsGeometry, QgsVectorLayer, QgsField, QgsFeature, QgsMapLayer,QgsProcessingFeedback,QgsProject,QgsVectorDataProvider,QgsLayerTreeLayer,QgsDistanceArea,QgsVectorFileWriter
+from qgis.core import QgsWkbTypes, QgsGeometry, QgsVectorLayer, QgsField, QgsFeature, QgsMapLayer,QgsProcessingFeedback,QgsProject,QgsVectorDataProvider,QgsLayerTreeLayer,QgsDistanceArea,QgsVectorFileWriter,QgsPoint
 
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -271,7 +271,8 @@ class EnRoute:
                 pr1 = vl1.dataProvider()
                  
                   # add fields
-                pr1.addAttributes([QgsField("fid",  QVariant.Int),
+                pr1.addAttributes([QgsField("nid",  QVariant.Int),
+                    QgsField("fid",  QVariant.Int),
                     QgsField("start", QVariant.String),
                     QgsField("end",  QVariant.String),
                     QgsField("cost", QVariant.Double)])
@@ -294,7 +295,8 @@ class EnRoute:
                 pr2 = vl2.dataProvider()
                 
                           # add fields
-                pr2.addAttributes([QgsField("fid",  QVariant.Int),
+                pr2.addAttributes([QgsField("nid",  QVariant.Int),
+                    QgsField("fid",  QVariant.Int),
                     QgsField("start", QVariant.String),
                     QgsField("end",  QVariant.String),
                     QgsField("cost", QVariant.Double)])
@@ -408,18 +410,14 @@ class EnRoute:
                                          # add a feature
                                          fet = QgsFeature(pr.fields())
                                          fet.setGeometry(tgeom)
-                                         #fet.setAttributes( QVariant(pfeature['fid']),QVariant(nf['start']),QVariant(nf['end']), QVariant(nf['cost']))
+
+                                         fet['nid']  = pfeature.id()
                                          fet['fid'] = pfeature['fid']
                                          fet['start'] = nf['start']
                                          fet['end'] = nf['end']
                                          fet['cost'] = nf['cost']
                                          
                                  
-                                 
-                                         #if tgeom.type() == QgsWkbTypes.LineGeometry:
-
-                                                  
-                                         #        fet['length'] = tgeom.length()    # 長さ書き込み
                                                       
  
                                                   
@@ -443,7 +441,22 @@ class EnRoute:
                       self.iface.mainWindow().statusBar().showMessage("Processed {} %".format(int(percent)))
                       
                       del( result_layer )
+                  
+                else:   #  始点と同一点の場合
+                      fet = QgsFeature(pr.fields())
+                      
+                      gLine = QgsGeometry.fromPolyline([QgsPoint(egeom.asPoint().x(), egeom.asPoint().y()),QgsPoint(egeom.asPoint().x(), egeom.asPoint().y())])
+                      fet.setGeometry(gLine)
+
+                      fet['nid']  = pfeature.id()
+                      fet['fid'] = pfeature['fid']
+                      fet['start'] = params['START_POINT']
+                      fet['end'] = params['START_POINT']
+                      fet['cost'] = 0.0
                  
+                      (res, outFeats ) = pr.addFeatures([fet])
+                      ip = ip + 1
+                      
  
             self.iface.mainWindow().statusBar().clearMessage()
             vl.updateExtents()     
