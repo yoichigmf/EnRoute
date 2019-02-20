@@ -500,7 +500,7 @@ class EnRoute:
             
             if tgtfile is not None:
             
-                 error = QgsVectorFileWriter.writeAsVectorFormat(cnvlayer, tgtfile , "utf-8",  driverName="csv")
+                 error = QgsVectorFileWriter.writeAsVectorFormat(cnvlayer, tgtfile , "sjis",  driverName="csv")
 
                  if error[0] == QgsVectorFileWriter.NoError:
                        print ("success!")
