@@ -275,6 +275,8 @@ class EnRoute:
                     QgsField("start", QVariant.String),
                     QgsField("end",  QVariant.String),
                     QgsField("cost", QVariant.Double)])
+                    #QgsField("length", QVariant.Double)])
+                     
                 vl1.updateFields() # tell the vector layer to fetch changes from the provider
   
                   # create layer  2
@@ -296,6 +298,8 @@ class EnRoute:
                     QgsField("start", QVariant.String),
                     QgsField("end",  QVariant.String),
                     QgsField("cost", QVariant.Double)])
+                    
+                    #QgsField("length", QVariant.Double)])
                 vl2.updateFields() # tell the vector layer to fetch changes from the provider 
                  
 
@@ -409,7 +413,17 @@ class EnRoute:
                                          fet['start'] = nf['start']
                                          fet['end'] = nf['end']
                                          fet['cost'] = nf['cost']
+                                         
                                  
+                                 
+                                         #if tgeom.type() == QgsWkbTypes.LineGeometry:
+
+                                                  
+                                         #        fet['length'] = tgeom.length()    # 長さ書き込み
+                                                      
+ 
+                                                  
+                                         
                                          if  caps & QgsVectorDataProvider.AddAttributes:  
                                                   (res, outFeats ) = pr.addFeatures([fet])
                                                   self.iface.messageBar().pushMessage("EnRoute", params['END_POINT'], level=0, duration=3)
