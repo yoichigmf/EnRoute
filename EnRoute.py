@@ -22,8 +22,9 @@
  ***************************************************************************/
 """
 from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication,QVariant
+
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QAction,QProgressBar
+from PyQt5.QtWidgets import QAction,QProgressBar,QMessageBox
 
 
 from qgis.PyQt.QtCore import *
@@ -221,6 +222,30 @@ class EnRoute:
  
             ABlayer = self.dlg.mMapLayerComboBox_3.currentLayer() # 2点レイヤ
             
+            index_mode = 2
+            
+            #  index 作成モードの取得
+            if self.dlg.radioButton_1.isChecked():   # create index
+                index_mode = 0
+                
+            elif self.dlg.radioButton_2.isChecked():   # do nothing
+                index_mode = 1
+                
+
+            
+            if index_mode == 0:    #  create index
+            
+                buttonReply = QMessageBox.question(self.dlg, '確認', u"インデックス付き点群レイヤをつくりますか？", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            
+                
+                if buttonReply == QMessageBox.Yes:
+                     print('Yes clicked.')
+                     self.createIndexColum( ptlayer )
+                else:
+                     return
+            
+
+                
             if ( rdlayer is not None and ptlayer is not None and ABlayer is not None):
                  
                                   
@@ -353,6 +378,28 @@ class EnRoute:
             
             pass
             
+    def  createIndexColum( self, pl):  #  インデックスカラムがついた仮想レイヤを作成する
+    
+            feedback = QgsProcessingFeedback()
+            
+            output_name = u'memory:idx_' + pl.name()
+    
+            params = { 'INPUT' : pl, 'FIELD_NAME' :'nid', 'FIELD_TYPE' : 1,'INPUT' : pl, 'NEW_FIRLD':1, 'FORMULA':'$id', 'OUTPUT' : output_name }
+
+            res = processing.run('qgis:fieldcalculator', params, feedback=feedback)
+            result_layer = res['OUTPUT']
+                      
+                      
+                              
+            print(result_layer.isValid())
+                              
+            if result_layer.isValid():
+                    QgsProject.instance().addMapLayer(result_layer)
+              
+              
+
+            
+    
             
     def  routing_loop( self, vl, features ,params, pgp , npoint):    
     

@@ -50,6 +50,9 @@ class EnRouteDialog(QtWidgets.QDialog, FORM_CLASS):
         self.mMapLayerComboBox_3.setFilters(QgsMapLayerProxyModel.PointLayer)
         
         
+        self.radioButton_2.setChecked(1)
+        
 
+        #self.mMapLayerComboBox_2.layerChanged.connect(self.mFieldComboBox.setLayer)
 
 
