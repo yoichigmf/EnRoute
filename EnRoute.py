@@ -295,13 +295,23 @@ class EnRoute:
                          
                 pr1 = vl1.dataProvider()
                  
+                if index_mode == 0:  # create index
                   # add fields
-                pr1.addAttributes([QgsField("nid",  QVariant.Int),
+                    pr1.addAttributes([QgsField("nid",  QVariant.Int),
                     QgsField("fid",  QVariant.Int),
                     QgsField("start", QVariant.String),
                     QgsField("end",  QVariant.String),
                     QgsField("cost", QVariant.Double)])
                     #QgsField("length", QVariant.Double)])
+                else:
+                    pr1.addAttributes([
+                    QgsField("fid",  QVariant.Int),
+                    QgsField("start", QVariant.String),
+                    QgsField("end",  QVariant.String),
+                    QgsField("cost", QVariant.Double)])
+                    #QgsField("length", QVariant.Double)])             
+                
+                
                      
                 vl1.updateFields() # tell the vector layer to fetch changes from the provider
   
@@ -319,14 +329,22 @@ class EnRoute:
                          
                 pr2 = vl2.dataProvider()
                 
+                if index_mode == 0:  # create index
                           # add fields
-                pr2.addAttributes([QgsField("nid",  QVariant.Int),
+                    pr2.addAttributes([QgsField("nid",  QVariant.Int),
                     QgsField("fid",  QVariant.Int),
                     QgsField("start", QVariant.String),
                     QgsField("end",  QVariant.String),
                     QgsField("cost", QVariant.Double)])
                     
-                    #QgsField("length", QVariant.Double)])
+
+                else:
+                    pr2.addAttributes([
+                    QgsField("fid",  QVariant.Int),
+                    QgsField("start", QVariant.String),
+                    QgsField("end",  QVariant.String),
+                    QgsField("cost", QVariant.Double)])
+                
                 vl2.updateFields() # tell the vector layer to fetch changes from the provider 
                  
 
@@ -336,7 +354,7 @@ class EnRoute:
                 QgsProject.instance().addMapLayer(vl1)
 
                      
-                self.routing_loop( vl1, features, params, p1g , npoint )  #  p1 経路探索ループ
+                self.routing_loop( vl1, features, params, p1g , npoint , index_mode )  #  p1 経路探索ループ
                      
                 self.iface.messageBar().pushMessage("EnRoute", 'add result from point1 to project done', level=0, duration=3)       
                               
@@ -360,7 +378,7 @@ class EnRoute:
                 features2 = ptlayer.getFeatures()
                  
                      
-                self.routing_loop( vl2, features2, params, p2g , npoint )  #  p2 経路探索ループ
+                self.routing_loop( vl2, features2, params, p2g , npoint ,  index_mode)  #  p2 経路探索ループ
                  
 
 
@@ -401,7 +419,7 @@ class EnRoute:
             
     
             
-    def  routing_loop( self, vl, features ,params, pgp , npoint):    
+    def  routing_loop( self, vl, features ,params, pgp , npoint, index_mode ):    
     
             pr = vl.dataProvider()
             vl.beginEditCommand("Feature triangulation")
@@ -458,7 +476,11 @@ class EnRoute:
                                          fet = QgsFeature(pr.fields())
                                          fet.setGeometry(tgeom)
 
-                                         fet['nid']  = pfeature.id()
+                                         if index_mode == 0:
+                                                  fet['nid']  = pfeature.id()
+                                                  
+                                                  
+                                                
                                          fet['fid'] = pfeature['fid']
                                          fet['start'] = nf['start']
                                          fet['end'] = nf['end']
@@ -495,7 +517,8 @@ class EnRoute:
                       gLine = QgsGeometry.fromPolyline([QgsPoint(egeom.asPoint().x(), egeom.asPoint().y()),QgsPoint(egeom.asPoint().x(), egeom.asPoint().y())])
                       fet.setGeometry(gLine)
 
-                      fet['nid']  = pfeature.id()
+                      if index_mode==0:
+                                  fet['nid']  = pfeature.id()
                       fet['fid'] = pfeature['fid']
                       fet['start'] = params['START_POINT']
                       fet['end'] = params['START_POINT']
